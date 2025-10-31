@@ -1,0 +1,224 @@
+{% extends "shipment_app/base.html" %}
+{% block title %}Shipment Details: {{ shipment.so_number }}{% endblock %}
+
+{% block content %}
+<style>
+    /* Container and Layout */
+    .shipment-container {
+        max-width: 950px;
+        margin: 40px auto;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        font-family: 'Segoe UI', sans-serif;
+        padding: 25px 35px;
+    }
+
+    .shipment-container h1 {
+        font-size: 1.8rem;
+        color: #1f4e79;
+        margin-bottom: 25px;
+        text-align: center;
+    }
+
+    .card {
+        border: none;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 25px;
+    }
+
+    .card-header {
+        background: linear-gradient(90deg, #007bff, #0056b3);
+        color: white;
+        font-size: 1.1rem;
+        font-weight: 600;
+        padding: 12px 18px;
+    }
+
+    .card-body {
+        background-color: #fdfdfd;
+        padding: 25px;
+    }
+
+    /* Status Styles */
+    .status-fly {
+        background: #00c851;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+    }
+    .status-arrived {
+        background: #33b5e5;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+    }
+    .status-pending {
+        background: #ffbb33;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+    }
+
+    /* Info Section */
+    .shipment-info p {
+        font-size: 1rem;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    .shipment-info strong {
+        color: #0d47a1;
+    }
+
+    /* Document Links */
+    .list-group-item {
+        border: 1px solid #ddd;
+        transition: 0.3s;
+    }
+    .list-group-item:hover {
+        background: #f1f9ff;
+    }
+    .list-group-item a {
+        color: #007bff;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    /* Form */
+    form.d-flex select {
+        border-radius: 6px;
+        padding: 8px 12px;
+        border: 1px solid #ccc;
+    }
+
+    .btn-warning {
+        background-color: #ff9800;
+        border: none;
+        font-weight: 600;
+    }
+    .btn-warning:hover {
+        background-color: #f57c00;
+    }
+
+    .btn-secondary {
+        display: inline-block;
+        background-color: #607d8b;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        transition: 0.3s;
+        font-weight: 500;
+    }
+    .btn-secondary:hover {
+        background-color: #455a64;
+    }
+
+    @media (max-width: 768px) {
+        .shipment-container {
+            padding: 20px;
+        }
+    }
+</style>
+
+<div class="shipment-container">
+    <h1>🔍 Shipment Details: {{ shipment.so_number }}</h1>
+
+    <div class="card shadow">
+        <div class="card-header">
+            Shipment Status:
+            {% if shipment.status == 'fly' %}
+                <span class="status-fly">Fly ✅</span>
+            {% elif shipment.status == 'arrived' %}
+                <span class="status-arrived">Arrived 📦</span>
+            {% else %}
+                <span class="status-pending">Pending 🕒</span>
+            {% endif %}
+        </div>
+
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 shipment-info">
+                    <p><strong>S/O Number:</strong> {{ shipment.so_number }}</p>
+                    <p><strong>LC Number:</strong> {{ shipment.lc_number|default:"N/A" }}</p>
+                    <p><strong>Total CTN:</strong> {{ shipment.total_ctn }}</p>
+                    <p><strong>Total KG:</strong> {{ shipment.total_kg|floatformat:2 }} KG</p>
+                    <p><strong>Created By:</strong> {{ shipment.created_by.username }} ({{ shipment.created_by.get_role_display }})</p>
+                    <p><strong>Created At:</strong> {{ shipment.created_at|date:"F d, Y H:i" }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <h4>📂 Document Links:</h4>
+                    <ul class="list-group mb-3">
+                        
+                        {% with receipt_files=shipment.receipt_files %}
+                        {% if receipt_files %}
+                            <li class="list-group-item bg-light"><strong>Receipt Copies ({{ receipt_files|length }}):</strong></li>
+                            {% for file in receipt_files %}
+                                <li class="list-group-item ms-3">
+                                    <a href="{{ file.uploaded_file.url }}" target="_blank">
+                                        {{ file.uploaded_file.name|slice:":40" }}... (Download)
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        {% else %}
+                             <li class="list-group-item">Receipt Copies: N/A</li>
+                        {% endif %}
+                        {% endwith %}
+
+                        {% with packing_files=shipment.packing_files %}
+                        {% if packing_files %}
+                            <li class="list-group-item bg-light mt-2"><strong>Packing Lists ({{ packing_files|length }}):</strong></li>
+                            {% for file in packing_files %}
+                                <li class="list-group-item ms-3">
+                                    <a href="{{ file.uploaded_file.url }}" target="_blank">
+                                        {{ file.uploaded_file.name|slice:":40" }}... (Download)
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="list-group-item mt-2">Packing Lists: N/A</li>
+                        {% endif %}
+                        {% endwith %}
+
+                        {% with awb_files=shipment.awb_files %}
+                        {% if awb_files %}
+                            <li class="list-group-item bg-light mt-2"><strong>AWB Copies ({{ awb_files|length }}):</strong></li>
+                            {% for file in awb_files %}
+                                <li class="list-group-item ms-3">
+                                    <a href="{{ file.uploaded_file.url }}" target="_blank">
+                                        {{ file.uploaded_file.name|slice:":40" }}... (Download)
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="list-group-item mt-2">AWB Copies: N/A</li>
+                        {% endif %}
+                        {% endwith %}
+
+                    </ul>
+
+                    {% if can_edit %}
+                        <h4 class="mt-4">🚀 Update Status:</h4>
+                        <form method="POST" class="d-flex">
+                            {% csrf_token %}
+                            {{ status_form.status }}
+                            <button type="submit" class="btn btn-warning ms-2">Update Status</button>
+                        </form>
+                    {% else %}
+                        <div class="alert alert-info mt-4">You do not have permission to change the status.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a href="{% url 'dashboard' %}" class="btn btn-secondary">← Back to Dashboard</a>
+</div>
+{% endblock %}
