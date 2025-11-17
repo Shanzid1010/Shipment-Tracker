@@ -2,73 +2,114 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">📊 Dashboard</h1>
+<div style="min-height:100vh; background:linear-gradient(135deg,#fff8f8,#ffeaea); font-family:'Poppins',sans-serif; padding:20px;">
 
-<div class="row mb-5">
-    <div class="col-md-6">
-        <div class="card text-white bg-success mb-3 shadow">
-            <div class="card-header">This Week's Total Shipment (kg)</div>
-            <div class="card-body">
-                <h2 class="card-title">{{ weekly_total|floatformat:2 }} KG</h2>
+    <!-- Header -->
+    <div style="width:100%; background:rgba(255,99,99,0.75); backdrop-filter:blur(10px); text-align:center; padding:20px 0; border-bottom:2px solid rgba(255,255,255,0.3); box-shadow:0 4px 10px rgba(0,0,0,0.1); border-radius:12px;">
+        <h1 style="color:white; font-weight:600; letter-spacing:1px; margin:0;">📊 Dashboard Overview</h1>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-5" style="margin-top:40px; display:flex; justify-content:center; gap:25px; flex-wrap:wrap;">
+        <div class="col-md-6" style="flex:1; min-width:280px;">
+            <div class="card text-white bg-success mb-3 shadow" 
+                 style="background:linear-gradient(135deg,#28a745,#5cd65c); border:none; border-radius:20px; box-shadow:0 8px 20px rgba(0,0,0,0.15); transition:transform 0.3s ease;"
+                 onmouseover="this.style.transform='scale(1.05)';"
+                 onmouseout="this.style.transform='scale(1)';">
+                <div class="card-header" style="font-weight:600; letter-spacing:0.5px; border:none; font-size:16px;">This Week's Total Shipment (kg)</div>
+                <div class="card-body" style="text-align:center;">
+                    <h2 class="card-title" style="font-size:28px; font-weight:700;">{{ weekly_total|floatformat:2 }} KG</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6" style="flex:1; min-width:280px;">
+            <div class="card text-white bg-primary mb-3 shadow" 
+                 style="background:linear-gradient(135deg,#007bff,#66b3ff); border:none; border-radius:20px; box-shadow:0 8px 20px rgba(0,0,0,0.15); transition:transform 0.3s ease;"
+                 onmouseover="this.style.transform='scale(1.05)';"
+                 onmouseout="this.style.transform='scale(1)';">
+                <div class="card-header" style="font-weight:600; letter-spacing:0.5px; border:none; font-size:16px;">This Month's Total Shipment (kg)</div>
+                <div class="card-body" style="text-align:center;">
+                    <h2 class="card-title" style="font-size:28px; font-weight:700;">{{ monthly_total|floatformat:2 }} KG</h2>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-6">
-        <div class="card text-white bg-primary mb-3 shadow">
-            <div class="card-header">This Month's Total Shipment (kg)</div>
-            <div class="card-body">
-                <h2 class="card-title">{{ monthly_total|floatformat:2 }} KG</h2>
-            </div>
-        </div>
+
+    <!-- Recent Shipments Header -->
+    <div class="d-flex justify-content-between align-items-center mb-3" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h3 style="font-weight:600; color:#333;">📋 Recent Shipments</h3>
+        {% if request.user.role == 'admin' %}
+        <a href="{% url 'download_report_csv' %}" 
+           style="text-decoration:none; border:2px solid #555; padding:8px 14px; border-radius:10px; color:#333; font-weight:500; transition:all 0.3s ease;"
+           onmouseover="this.style.background='#333'; this.style.color='white';"
+           onmouseout="this.style.background='transparent'; this.style.color='#333';">
+           Download Report (CSV)
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Table Section -->
+    <div class="table-responsive" style="background:white; border-radius:16px; box-shadow:0 6px 18px rgba(0,0,0,0.1); overflow:hidden;">
+        <table class="table table-hover table-striped" style="margin:0; border-radius:16px; overflow:hidden;">
+            <thead class="table-dark" style="background:#ff4d4d; color:white; text-align:center;">
+                <tr>
+                    <th style="padding:14px;">S/O Number</th>
+                    <th>LC Number</th>
+                    <th>CTN / KG</th>
+                    <th>Status</th>
+                    <th>Created By</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody style="text-align:center; font-weight:500;">
+                {% for shipment in shipments %}
+                <tr style="transition:all 0.3s ease;" 
+                    onmouseover="this.style.background='#fff2f2';" 
+                    onmouseout="this.style.background='white';">
+                    <td>{{ shipment.so_number }}</td>
+                    <td>{{ shipment.lc_number|default:"N/A" }}</td>
+                    <td>{{ shipment.total_ctn }} CTN / {{ shipment.total_kg|floatformat:2 }} KG</td>
+                    <td>
+                        {% if shipment.status == 'fly' %}
+                            <span style="background:#28a745; color:white; padding:6px 12px; border-radius:30px; font-size:14px; font-weight:600; display:inline-block;">Fly ✅</span>
+                        {% elif shipment.status == 'arrived' %}
+                            <span style="background:#ffc107; color:black; padding:6px 12px; border-radius:30px; font-size:14px; font-weight:600; display:inline-block;">Arrived 📦</span>
+                        {% else %}
+                            <span style="background:#dc3545; color:white; padding:6px 12px; border-radius:30px; font-size:14px; font-weight:600; display:inline-block;">Pending 🕒</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ shipment.created_by.username|default:"Admin" }}</td>
+                    <td>
+                        <a href="{% url 'shipment_detail' shipment.pk %}" 
+                           style="text-decoration:none; background:#007bff; color:white; padding:6px 12px; border-radius:8px; transition:all 0.3s ease; font-weight:500;"
+                           onmouseover="this.style.background='#0056b3';"
+                           onmouseout="this.style.background='#007bff';">
+                           View
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align:center; color:#777; padding:20px;">No shipments found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- View All Button -->
+    <div style="text-align:center; margin-top:30px;">
+        <a href="{% url 'search_shipment' %}" 
+           style="text-decoration:none; background:linear-gradient(135deg,#ff4d4d,#ff8080); color:white; padding:12px 25px; border-radius:12px; font-weight:600; transition:all 0.3s ease;"
+           onmouseover="this.style.background='linear-gradient(135deg,#ff1a1a,#ff6666)'; this.style.transform='scale(1.05)';"
+           onmouseout="this.style.background='linear-gradient(135deg,#ff4d4d,#ff8080)'; this.style.transform='scale(1)';">
+           View All Shipments
+        </a>
+    </div>
+
+    <!-- Footer -->
+    <div style="width:100%; background:black; color:white; text-align:center; padding:10px 0; margin-top:50px; font-size:14px; letter-spacing:0.5px; border-radius:8px;">
+        © 2025 The Winning Corporation | Developed by Md Shanzid Hossain
     </div>
 </div>
-
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h3>📋 Recent Shipments</h3>
-    {% if request.user.role == 'admin' %}
-    <a href="{% url 'download_report_csv' %}" class="btn btn-sm btn-outline-secondary">Download Report (CSV)</a>
-    {% endif %}
-</div>
-
-<div class="table-responsive">
-    <table class="table table-hover table-striped">
-        <thead class="table-dark">
-            <tr>
-                <th>S/O Number</th>
-                <th>LC Number</th>
-                <th>CTN / KG</th>
-                <th>Status</th>
-                <th>Created By</th>
-                <th>Details</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for shipment in shipments %}
-            <tr>
-                <td>{{ shipment.so_number }}</td>
-                <td>{{ shipment.lc_number|default:"N/A" }}</td>
-                <td>{{ shipment.total_ctn }} CTN / {{ shipment.total_kg|floatformat:2 }} KG</td>
-                <td>
-                    {% if shipment.status == 'fly' %}
-                        <span class="status-fly">Fly ✅</span>
-                    {% elif shipment.status == 'arrived' %}
-                        <span class="status-arrived">Arrived 📦</span>
-                    {% else %}
-                        <span class="status-pending">Pending 🕒</span>
-                    {% endif %}
-                </td>
-                <td>{{ shipment.created_by.username|default:"Admin" }}</td>
-                <td><a href="{% url 'shipment_detail' shipment.pk %}" class="btn btn-sm btn-info text-white">View</a></td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="6" class="text-center">No shipments found.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-<a href="{% url 'search_shipment' %}" class="btn btn-secondary mt-3">View All Shipments</a>
-
 {% endblock %}
