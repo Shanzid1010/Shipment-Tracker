@@ -1,3 +1,5 @@
+# shipment_app/models.py
+
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.db.models import QuerySet
@@ -40,12 +42,9 @@ class Shipment(models.Model):
     class Meta:
         ordering = ['-created_at'] # নতুনগুলো আগে দেখানোর জন্য
 
-    # --- টেমপ্লেটে সহজে ব্যবহারের জন্য কাস্টম @property যোগ করা হলো ---
-    # এই প্রপার্টিগুলো টেমপ্লেটে shipment.receipt_files নামে কল করা যাবে।
-    
+    # --- টেমপ্লেটে সহজে ব্যবহারের জন্য কাস্টম @property ---
     @property
     def receipt_files(self) -> QuerySet:
-        # shipment.files হলো related_name, যা ShipmentFile-এর সকল ফাইল দেয়
         return self.files.filter(file_type='receipt')
 
     @property
@@ -63,10 +62,25 @@ class ShipmentFile(models.Model):
         ('packing', 'Packing List'),
         ('awb', 'AWB Copy'),
     ]
-    # related_name='files' ব্যবহার করা হয়েছে Shipment মডেল থেকে ফাইলগুলো অ্যাক্সেস করার জন্য
     shipment = models.ForeignKey(Shipment, related_name='files', on_delete=models.CASCADE) 
     file_type = models.CharField(max_length=20, choices=FILE_TYPE_CHOICES)
     uploaded_file = models.FileField(upload_to='shipment_files/') 
 
     def __str__(self):
         return f"{self.shipment.so_number} - {self.get_file_type_display()}"
+
+# 🌟 ৪. কাস্টমার অ্যাকাউন্ট মডেল (নতুন ফিচার) 🌟
+class CustomerAccount(models.Model):
+    name = models.CharField(max_length=200, verbose_name="Customer Name")
+    # কাস্টমারকে হিসাব দেখার জন্য এই সিক্রেট আইডি দিতে হবে
+    access_id = models.CharField(max_length=50, unique=True, verbose_name="Secret Access ID") 
+    # গুগল স্প্রেডশীটের লিঙ্ক
+    finance_sheet_url = models.URLField(max_length=500, verbose_name="Google Sheet URL")
+    
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        ordering = ['name']
+        verbose_name = "Customer Account"
+        verbose_name_plural = "Customer Accounts"
