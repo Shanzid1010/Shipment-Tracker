@@ -1,0 +1,71 @@
+{% extends "shipment_app/base.html" %}
+{% block title %}Account: {{ account.name }}{% endblock %}
+
+{% block content %}
+<div style="display:flex; justify-content:center; align-items:center; min-height:100vh; flex-direction:column; background:linear-gradient(135deg, #fff8f8, #ffeaea); font-family:'Poppins', sans-serif;">
+
+    <!-- Header -->
+    <div style="width:100%; background:rgba(255, 99, 99, 0.75); backdrop-filter:blur(10px); text-align:center; padding:20px 0; border-bottom:2px solid rgba(255,255,255,0.3); box-shadow:0 4px 10px rgba(0,0,0,0.1);">
+        <h2 style="color:white; font-weight:600; letter-spacing:1px;">🔐 Account Access Portal</h2>
+    </div>
+
+    <div class="row justify-content-center" style="width:100%; margin-top:40px;">
+        <div class="col-md-6" style="max-width:500px; width:90%;">
+            <div class="card" style="box-shadow:0 10px 25px rgba(0,0,0,0.15); border:none; border-radius:20px; background:rgba(255,255,255,0.95); backdrop-filter:blur(5px); transition:transform 0.3s;">
+                <div class="card-body text-center" style="padding:40px;">
+                    <h1 class="card-title mb-4" style="color:#333; font-weight:700; font-size:26px;">🔐 Account Access: {{ account.name }}</h1>
+                    <p class="text-muted" style="color:#666; font-size:15px;">আপনার আর্থিক হিসাব দেখার জন্য দয়া করে আপনার <b>Secret Access ID</b> প্রবেশ করুন।</p>
+                    
+                    {% if sheet_url %}
+                        <div class="alert alert-success mt-4" style="background:#d4edda; color:#155724; border:none; border-radius:10px; padding:12px; font-weight:500;">
+                            ✅ Access Granted!
+                        </div>
+                        <a href="{{ sheet_url }}" target="_blank" 
+                           style="display:block; text-decoration:none; background:linear-gradient(135deg, #ff4d4d, #ff8080); color:white; border:none; padding:14px 0; font-size:16px; border-radius:12px; transition:all 0.3s ease; margin-top:15px;"
+                           onmouseover="this.style.background='linear-gradient(135deg, #ff1a1a, #ff6666)'; this.style.transform='scale(1.03)';"
+                           onmouseout="this.style.background='linear-gradient(135deg, #ff4d4d, #ff8080)'; this.style.transform='scale(1)';">
+                            View Financial Statement (Google Sheet)
+                        </a>
+                    {% else %}
+                        <form method="POST" class="mt-4">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <input type="text" name="access_id" class="form-control form-control-lg text-center" 
+                                       placeholder="Enter Secret Access ID" required
+                                       style="border:2px solid #ffcccc; border-radius:10px; padding:12px; font-size:16px; text-align:center; outline:none; transition:all 0.3s ease;"
+                                       onfocus="this.style.border='2px solid #ff6666'; this.style.boxShadow='0 0 8px rgba(255,102,102,0.5)';"
+                                       onblur="this.style.border='2px solid #ffcccc'; this.style.boxShadow='none';">
+                            </div>
+                            
+                            {% if error_message %}
+                                <div class="alert alert-danger" style="background:#f8d7da; color:#721c24; border:none; border-radius:10px; padding:12px;">
+                                    {{ error_message }}
+                                </div>
+                            {% endif %}
+                            
+                            <button type="submit" 
+                                    style="width:100%; background:linear-gradient(135deg, #ff4d4d, #ff8080); border:none; color:white; font-weight:600; padding:14px 0; border-radius:12px; font-size:16px; transition:all 0.3s ease;"
+                                    onmouseover="this.style.background='linear-gradient(135deg, #ff1a1a, #ff6666)'; this.style.transform='scale(1.03)';"
+                                    onmouseout="this.style.background='linear-gradient(135deg, #ff4d4d, #ff8080)'; this.style.transform='scale(1)';">
+                                Verify ID & View Statement
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    <a href="{% url 'account_list' %}" 
+                       style="display:inline-block; margin-top:25px; color:#555; text-decoration:none; font-weight:500; transition:all 0.3s;"
+                       onmouseover="this.style.color='#ff4d4d';"
+                       onmouseout="this.style.color='#555';">
+                        ← Back to Customer List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="width:100%; background:black; color:white; text-align:center; padding:10px 0; margin-top:40px; font-size:14px; letter-spacing:0.5px;">
+        © 2025 The Winning Corporation | Developed by Md Shanzid Hossain
+    </div>
+</div>
+{% endblock %}
